@@ -27,26 +27,30 @@ export class MessageManager {
     }
     private eventTarget:cc.EventTarget = new cc.EventTarget();
     private static _instance: MessageManager = new MessageManager();
-    private messageDict:Dictionary<MSG.MessageCallback[]> = new Dictionary<MSG.MessageCallback[]>();//注册的消息字典,键是消息名字，值是对应的回调数组
+    private messageDict:Dictionary<CallbackStoreStruct[]> = new Dictionary<CallbackStoreStruct[]>();//注册的消息字典,键是消息名字，值是对应的回调数组
+    private callbacksCallerDict:Dictionary<any> = new Dictionary<any>();
     public static getInstance() : MessageManager{
         return this._instance;
     }
 
     /**
      * 注册一个消息回调，参数是消息名称和消息回调 
-     * 填消息回调的时候记得写.bind(this)
+     * 填消息回调的时候记得写第三个参数this
              */
     public Register(msgName:string,callback:MSG.MessageCallback,caller:any = null) {
         console.log("注册" + msgName);
+        var newCBKstruct = new CallbackStoreStruct(callback,caller);
         if(this.messageDict.has(msgName)){
             var callbacks = this.messageDict.get(msgName);
-            if(callbacks.indexOf(callback) === -1)//回调不存在，插入
+            if(callbacks.indexOf(newCBKstruct) === -1)//回调不存在，插入
             {
-                callbacks.push(callback);
+                callbacks.push(newCBKstruct);
+                this.callbacksCallerDict.set(callback.toString(),caller);
             }
         } else {
-            var callbacks: MSG.MessageCallback[] = [callback];
+            var callbacks: CallbackStoreStruct[] = [newCBKstruct];
             this.messageDict.set(msgName,callbacks); 
+            this.callbacksCallerDict.set(callback.toString(),caller);
         }
     }
     /**
@@ -54,7 +58,7 @@ export class MessageManager {
      * 所有绑定到这个消息的回调函数都会传入你填入的data参数然后执行
      * 如果没有数据 可以不填 默认是null
              */
-    public Send(msgName:string,caller:any,data:any = null){
+    public Send(msgName:string,param1?:any,param2?:any,param3?:any){
         //this.eventTarget.emit(msgName,new GameMessage.Message(msgName,data));
         console.log("Send" + msgName);
         var callbacks = this.messageDict.get(msgName);
@@ -63,7 +67,7 @@ export class MessageManager {
             return
             } 
             callbacks.forEach(callback => {
-                callback.call(caller,new MSG.Message(msgName,data));
+                callback.Callback.call(callback.Caller,param1,param2,param3);
               });
         
     }
@@ -86,10 +90,10 @@ export class MessageManager {
             return true;
         }
 
-        var index = callbacks.indexOf(callback)
+        var index = -1;
         //console.log("试图删除：" + callback.toString());
         for(let i = 0; i <callbacks.length; i++){
-            //console.log(callbacks[i].toString())
+            if(callbacks[i].Callback = callback) index = i;break;
         }
         if(index === -1){//如果不存在这个函数，就返回
              console.log(callback.toString()+ "回调不存在");return false;

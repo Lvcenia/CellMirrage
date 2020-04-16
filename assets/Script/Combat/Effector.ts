@@ -44,13 +44,16 @@ export default class Effector {
     }
 
     private DeactivateEffect(effect:EffectBase){
+        MessageManager.getInstance().Drop(effect.Ended,this.DeactivateEffect);
         console.log("Deactivate");
+        effect.Quit();
         this.activeEffects.delete(effect.Param.Name);//从active里面去掉
         this.expiredEffects.set(effect.Param.Name,effect);
     }
 
     private ReactivateEffect(effectParam:EffectParam){
         var effect = this.expiredEffects.get(effectParam.Name);
+
         effect.Param = effectParam;
         this.activeEffects.set(effectParam.Name,effect);
         this.expiredEffects.delete(effectParam.Name);//从expire里面去掉
@@ -68,21 +71,9 @@ export default class Effector {
                 this.ReactivateEffect(effectParam);
             } else {//不存在这个效果，创建，并且这个效果插入到队列里去，插入的时候要事件绑定,在效果完成之后送到过期列表里
                 var effect:EffectBase = new EffectBase(effectParam,sender,this.node);
-                // switch (effectParam.Type[0]) {
-                //     case "C":effect = new C_Effect(effectParam,sender,this.node);
-                //         break;
-                //     case "T":
-                        
-                //         break;
-                //     case "P":
-                        
-                //         break;
-                //     default:
-                //         break;
-                // }
-
+                
                 this.activeEffects.set(effectParam.Name,effect);
-                MessageManager.getInstance().Register(effect.Ended,this.DeactivateEffect);
+                MessageManager.getInstance().Register(effect.Ended,this.DeactivateEffect,this);
                 effect.Execute();
             }
 

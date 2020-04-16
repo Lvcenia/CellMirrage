@@ -27,8 +27,7 @@ export default class GameManager extends cc.Component {
     }
 
     start () {
-        var s =new EffectParam(EffectTemplates.HP_DOWN_NORMAL.Name);
-        console.log(JSON.stringify(s.deltaValue));
+        
 
     }
 

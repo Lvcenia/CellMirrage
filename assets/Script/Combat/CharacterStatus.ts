@@ -8,6 +8,7 @@
 import Effector from "./Effector";
 import Damager from "./Damager";
 import { EffectManager, EffectParam } from "./Effects";
+import { EffectTemplates } from "./EffectTemplates";
 
 const {ccclass, property} = cc._decorator;
 
@@ -19,7 +20,9 @@ export const CombatPropertyTypes = {
     Scale:"Scale",
     Rotation:"Rotation",
     Velocity:"Velocity",
-    Acceleration:"Acceleration"
+    Acceleration:"Acceleration",
+    hasHitBox:"hasHitBox",
+    Color:"Color"
 
 }
 
@@ -32,12 +35,16 @@ export class CombatProperty{
         this.Rotation = new cc.Vec3(0,0,0);
         this.Scale = new cc.Vec3(1,1,1);
         this.Velocity = new cc.Vec3(0,0,0);
-        this.Acceleration =new cc.Vec3(0,0,0);;
+        this.Acceleration =new cc.Vec3(0,0,0);
+        this.hasHitBox = true;
+        this.Color = new cc.Vec3(0,0,0);
     }
     @property()
     MaxHP:number;
     @property()
     HP:number;
+    @property()
+    hasHitBox:boolean;
     @property()
     Position:cc.Vec3;
     @property()
@@ -48,6 +55,8 @@ export class CombatProperty{
     Velocity:cc.Vec3;
     @property()
     Acceleration:cc.Vec3;
+    @property()
+    Color:cc.Vec3;
 
 };
 /**这个类是挂在玩家和敌人物体上的战斗管理类，管理各种可能的战斗属性和战斗生命周期 */
@@ -55,7 +64,7 @@ export class CombatProperty{
 export default class CharacterStatus extends cc.Component {
 
     @property(CombatProperty)
-    public Property:CombatProperty = new CombatProperty();
+    public Property:CombatProperty;
 
     @property(Effector)
     public Effector:Effector;;
@@ -64,17 +73,17 @@ export default class CharacterStatus extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.Effector = new Effector(this.node);
+        
     }
 
     start () {
-        
-
-
+        this.Effector = new Effector(this.node);
+        this.Property = new CombatProperty();
         
     }
 
     update (dt) {
+
 
     }
 
@@ -104,8 +113,34 @@ export default class CharacterStatus extends cc.Component {
     }
 
     onDamaged(damager:Damager){
-        EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
+        //EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
+        EffectManager.getInstance().TriggerEffect(new EffectParam(EffectTemplates.HP_DOWN_DELAY.Name),this.node,this.node);
 
+    }
+
+    public GetProperty(type:string):cc.Vec3{
+        switch(type){
+            case CombatPropertyTypes.MaxHP:
+                return new cc.Vec3(this.Property.MaxHP,0,0);
+            case CombatPropertyTypes.HP:
+                return new cc.Vec3(this.Property.HP,0,0);
+            case CombatPropertyTypes.Position:
+                return this.Property.Position;
+            case CombatPropertyTypes.Rotation:
+                return this.Property.Rotation
+            case CombatPropertyTypes.Scale:
+                return this.Property.Scale;
+            case CombatPropertyTypes.Acceleration:
+                return this.Property.Acceleration;
+            case CombatPropertyTypes.Velocity:
+                return this.Property.Velocity;
+            case CombatPropertyTypes.hasHitBox:
+                return new cc.Vec3(this.Property.hasHitBox? 1:0,0,0);
+            case CombatPropertyTypes.Color:
+                return this.Property.Color;
+
+            default:break;
+        }
     }
 
     public SetProperty(type:string,value:cc.Vec3){
@@ -114,7 +149,9 @@ export default class CharacterStatus extends cc.Component {
                 this.Property.MaxHP = value.x;
                 break;
             case CombatPropertyTypes.HP:
+                console.log("Setting Value" + this.Property.HP + "to " + value.x);
                 this.Property.HP = value.x;
+                console.log("Set Value" + this.Property.HP);
                 break;
             case CombatPropertyTypes.Position:
                 this.Property.Position = value;
@@ -137,6 +174,23 @@ export default class CharacterStatus extends cc.Component {
                 this.Property.Velocity = value;
                 this.getComponent(cc.RigidBody).applyLinearImpulse(new cc.Vec2(value.x,value.y),cc.Vec2.ZERO,false);
                 break;
+            case CombatPropertyTypes.hasHitBox:
+                var selfCol = this.getComponent(cc.PhysicsCollider);
+                var colliders = this.getComponentsInChildren(cc.PhysicsCollider);
+                var hasHitBox = (value.x > 0 ? false:true);
+                selfCol.sensor = hasHitBox;
+                this.Property.hasHitBox = hasHitBox;
+                    colliders.forEach(element => {
+                        element.sensor = hasHitBox;
+                    });
+                    break;
+            case CombatPropertyTypes.Color:
+                this.Property.Color = value;
+
+
+                
+                
+            
             default:break;
         }
 

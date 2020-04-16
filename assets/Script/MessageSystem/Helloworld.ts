@@ -24,7 +24,7 @@ export default class Helloworld extends cc.Component {
 
     update(){
         if(this.testNum < 5){
-        MessageManager.getInstance().Send("test",233333);
+        //MessageManager.getInstance().Send("test",233333);
         }
         this.testNum++;
         if(this.testNum == 5)

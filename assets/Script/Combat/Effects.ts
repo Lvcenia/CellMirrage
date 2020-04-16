@@ -41,6 +41,7 @@ export enum EffectType{
  * 这个类用来描述一个效果的具体参数，因为可能也不需要很多种继承
  * 所以就直接把一堆属性全都搬到一起了
  */
+@ccclass("EffectParam")
 export class EffectParam{
     /**构造函数，填的时候使用EffectTemplates.xxxx.Name这样的格式 */
     constructor(effectName:string){
@@ -48,16 +49,16 @@ export class EffectParam{
         this.ID = EffectTemplates[effectName].ID;
         this.Name = EffectTemplates[effectName].Name;
         this.Duratin = EffectTemplates[effectName].Duration;
-        this.Type = <EffectType>EffectTemplates[effectName].Type;
+        this.Type = EffectTemplates[effectName].Type;
         this.cycleTime = EffectTemplates[effectName].cycleTime;
-        this.deltaValue = new cc.Vec4(dv.x,dv.y,dv.z,dv.w);
+        this.deltaValue = new cc.Vec3(dv.x,dv.y,dv.z);
         this.isCycle = EffectTemplates[effectName].isCycle;
         this.isPercentage = EffectTemplates[effectName].isPercentage;
-        this.isDuration = EffectTemplates[effectName].isDuration;
-        this.isPercentage = EffectTemplates[effectName].isPercentage;
+        this.isTemporary = EffectTemplates[effectName].isTemporary;
         this.isStackable = EffectTemplates[effectName].isStackable;
         this.maxStackNum = EffectTemplates[effectName].maxStackNum;
         this.percentFactor = EffectTemplates[effectName].percentFactor;
+        this.percentBase = EffectTemplates[effectName].percentBase;
     }
     /**
      * 效果的ID
@@ -68,17 +69,17 @@ export class EffectParam{
      * 效果名
      */
     @property()
-    public Name:string = "Effect1";
+    public Name:string ;
     /**
      * 效果的大类
      */
     @property()
-    public Type:EffectType
+    public Type:string
     /**
-     * 是否时间持续
+     * 是否会在结束以后把属性值恢复到使用前的状态
      */
     @property()
-    public isDuration:boolean;
+    public isTemporary:boolean;
     /**
      * 效果的持续时间
      */
@@ -99,7 +100,7 @@ export class EffectParam{
      * 一维属性取第一位，二维取头两位，以此类推
      */
     @property()
-    public deltaValue:cc.Vec4;
+    public deltaValue:cc.Vec3;
     /**
      * 是否周期性施加
      */
@@ -121,6 +122,9 @@ export class EffectParam{
      */
     @property()
     public percentFactor:number
+    /**百分比的基准属性 */
+    @property()
+    public percentBase:string
 
 }
 
@@ -131,10 +135,10 @@ enum EffectState{
     Ended
 }
 
-@ccclass
+@ccclass("EffectBase")
 export class EffectBase  {
     /**效果需要的参数 */
-    @property()
+    @property(EffectParam)
     public Param:EffectParam
     /**效果的发送者 */
     @property(cc.Node)
@@ -153,6 +157,10 @@ export class EffectBase  {
     /** 这两个消息用来和Effector通信*/
     public Started:string;
     public Ended:string;
+
+    dataBefore:cc.Vec3;
+    currentCycleNum:number;
+    targetStat:CharacterStatus;
 
     constructor(param:EffectParam,sender:cc.Node,target:cc.Node){
         this.Param = param;
@@ -173,18 +181,18 @@ export class EffectBase  {
     }
 
     public ResetCallbacks(){
-        MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin);
-        MessageManager.getInstance().Register(this.ToStayMessage,this.OnStay);
-        MessageManager.getInstance().Register(this.ToEndMessage,this.OnEnd);
+        MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin,this);
+        MessageManager.getInstance().Register(this.ToStayMessage,this.OnStay,this);
+        MessageManager.getInstance().Register(this.ToEndMessage,this.OnEnd,this);
     }
 
     /**对外暴露的执行接口，注册消息回调，触发开始事件 */
     public Execute(){
-        MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin);
-        MessageManager.getInstance().Register(this.ToStayMessage,this.OnStay);
-        MessageManager.getInstance().Register(this.ToEndMessage,this.OnEnd);
+        MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin,this);
+        MessageManager.getInstance().Register(this.ToStayMessage,this.OnStay,this);
+        MessageManager.getInstance().Register(this.ToEndMessage,this.OnEnd,this);
 
-        MessageManager.getInstance().Send(this.ToStartMessage,this);
+        MessageManager.getInstance().Send(this.ToStartMessage);
 
     }
 
@@ -195,32 +203,89 @@ export class EffectBase  {
         MessageManager.getInstance().Drop(this.ToEndMessage,this.OnEnd);
     }
 
-    /**效果开始时执行 在需要的逻辑结束以后触发Stay事件*/
+    /**效果开始时执行 主要是效果的初始化工作 在需要的逻辑结束以后触发Stay事件*/
     protected OnBegin(){
+        //非空检查
         console.log("效果" + this.Param.Name +"Begin");
-
         if(this.Target == null) {
             console.warn("效果" + this.Param.Name + "target为空");
             return;
         }
-        var targetStat = this.Target.getComponent(CharacterStatus);
-        if(targetStat == null){
+        this.targetStat = this.Target.getComponent(CharacterStatus);
+        if(this.targetStat == null){
             console.warn(this.Target.name +  "属性为空");
             return;
         }
-        MessageManager.getInstance().Send(this.ToStayMessage,this);
+        //储存旧值
+        this.dataBefore = this.targetStat.GetProperty(this.Param.Type);
+        console.log("旧：" + this.dataBefore.x + " " + this.dataBefore.y + " " + this.dataBefore.z);
+        //进入活跃状态
+        MessageManager.getInstance().Send(this.ToStayMessage);
     }
 
-    /**效果进行中执行  在需要的逻辑结束以后触发End事件*/
+    /**效果进行中执行  消息的主要逻辑 在需要的逻辑结束以后触发End事件*/
     protected OnStay(){
         console.log("效果" + this.Param.Name + "Stay");
-        MessageManager.getInstance().Send(this.ToEndMessage,this);
+        if(this.Param.Duratin == 0){//即时的效果
+            console.log("duration 0");
+            if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+            this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+            else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+                this.targetStat.SetProperty(this.Param.Type,
+                    this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+             }
+             MessageManager.getInstance().Send(this.ToEndMessage);
+            return;
+        }
+        else{//如果不是即时效果
+            console.log("duration" + this.Param.Duratin);
+            if(this.Param.isCycle == false){//如果不是循环改变 设一个定时器，在到达时间后触发
+                setTimeout(()=>{
+                    if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+                        this.targetStat.SetProperty(this.Param.Type,
+                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+                     }
+                     MessageManager.getInstance().Send(this.ToEndMessage);
+                },this.Param.Duratin*1000);
+            } else {//如果是循环改变的
+                this.ChangeValueOverTime();
+            }
+        }
     }
 
     /**效果结束时执行 */
     protected OnEnd(){
         console.log("效果" + this.Param.Name + "End");
+        if(this.Param.isTemporary){//如果是临时的可逆效果   恢复原来的值
+            this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+        }
+        //结束
         MessageManager.getInstance().Send(this.Ended,this);
+    }
+
+    private ChangeValueOverTime(){
+        this.currentCycleNum++;
+        if(this.currentCycleNum < Math.floor(this.Param.Duratin/this.Param.cycleTime)){
+            if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+                        this.targetStat.SetProperty(this.Param.Type,
+                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+                     }
+            setTimeout(function(){
+                if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+                        this.targetStat.SetProperty(this.Param.Type,
+                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+                     }
+            },this.Param.cycleTime*1000);
+        }
+        else{//结束
+            MessageManager.getInstance().Send(this.ToEndMessage);
+        }
     }
 }
 
@@ -238,21 +303,21 @@ export class C_Effect extends EffectBase {
         console.log("C_Effect_OnBegin()");
         super.OnBegin();
         //this.propertyType = this.Param.Type.split("_")[0];
-        MessageManager.getInstance().Send(this.ToStayMessage,this);
+        MessageManager.getInstance().Send(this.ToStayMessage);
         }
     protected OnStay(){
         console.log("C_Effect_OnStay()");
         super.OnStay();
         //this.propertyType = this.Param.Type.split("_")[0];
 
-        MessageManager.getInstance().Send(this.ToEndMessage,this);
+        MessageManager.getInstance().Send(this.ToEndMessage);
     }
     protected OnEnd(){
         console.log("C_Effect_OnEnd()");
         super.OnEnd();
         this.propertyType = this.Param.Type.split("_")[0];
 
-        MessageManager.getInstance().Send(this.Ended,this);
+        MessageManager.getInstance().Send(this.Ended);
     }
 
 }

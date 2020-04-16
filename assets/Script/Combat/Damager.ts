@@ -29,15 +29,22 @@ export default class Damager extends cc.Component {
     @property
     public damageFactor:number = 1;
 
+    @property
+    isDOT:boolean;
+
+    @property
+    isPercentage:boolean;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.Owner = this.node;
+
     }
 
-    //  start () {
+      start () {
+        this.Owner = this.node;
  
-    //  }
+     }
 
     /**这个函数由被攻击者调用，计算伤害，然后返回效果给被攻击者，伤害值四舍五入 */
     public GetDamage():EffectParam{
