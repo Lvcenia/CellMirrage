@@ -6,8 +6,6 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 
-
-
 import * as MSG from "./Message"
 import {MessageManager} from "./MessageManager"
 
@@ -16,7 +14,7 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class NewClass extends cc.Component {
     public test2(msg :MSG.Message){
-        console.log("test 其他脚本" +"name: " +msg.MessageName +"data: " + msg.Data);
+        //console.log("test 其他脚本" +"name: " +msg.MessageName +"data: " + msg.Data);
     }
 
     x = 0;

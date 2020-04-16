@@ -29,7 +29,7 @@ export const UIEventMsg = {
  * 定义消息回调函数
  */
 export interface  MessageCallback{
-	(msg:Message): any;
+	(param1?:any,param2?:any,param3?:any): any;
 }
 
 /**

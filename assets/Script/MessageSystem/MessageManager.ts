@@ -10,6 +10,16 @@ const {ccclass, property} = cc._decorator;
 import * as MSG  from "./Message"
 import Dictionary from "../Generic/Dictionary";
 
+
+class CallbackStoreStruct {
+    constructor(callback:MSG.MessageCallback,caller:any){
+        this.Callback = callback;
+        this.Caller = caller;
+    }
+    Callback:MSG.MessageCallback;
+    Caller:any
+}
+
 @ccclass
 export class MessageManager {
     constructor(){
@@ -26,7 +36,7 @@ export class MessageManager {
      * 注册一个消息回调，参数是消息名称和消息回调 
      * 填消息回调的时候记得写.bind(this)
              */
-    public Register(msgName:string,callback:MSG.MessageCallback) {
+    public Register(msgName:string,callback:MSG.MessageCallback,caller:any = null) {
         console.log("注册" + msgName);
         if(this.messageDict.has(msgName)){
             var callbacks = this.messageDict.get(msgName);
@@ -44,15 +54,16 @@ export class MessageManager {
      * 所有绑定到这个消息的回调函数都会传入你填入的data参数然后执行
      * 如果没有数据 可以不填 默认是null
              */
-    public Send(msgName:string,data:any = null){
+    public Send(msgName:string,caller:any,data:any = null){
         //this.eventTarget.emit(msgName,new GameMessage.Message(msgName,data));
+        console.log("Send" + msgName);
         var callbacks = this.messageDict.get(msgName);
         if(callbacks === undefined){
             console.log(`消息${msgName}没有绑定回调`);
             return
             } 
             callbacks.forEach(callback => {
-                callback.call(this,new MSG.Message(msgName,data));
+                callback.call(caller,new MSG.Message(msgName,data));
               });
         
     }
@@ -76,7 +87,7 @@ export class MessageManager {
         }
 
         var index = callbacks.indexOf(callback)
-        console.log("试图删除：" + callback.toString());
+        //console.log("试图删除：" + callback.toString());
         for(let i = 0; i <callbacks.length; i++){
             //console.log(callbacks[i].toString())
         }

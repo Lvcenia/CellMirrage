@@ -13,7 +13,7 @@ export default class Helloworld extends cc.Component {
     self = this;
 
     test :MSG.MessageCallback = (msg:MSG.Message)=> {
-        console.log("test 脚本内部" + "name: " +msg.MessageName +"data: " + msg.Data);
+        //console.log("test 脚本内部" + "name: " +msg.MessageName +"data: " + msg.Data);
     }
     start () {
         // init logic
