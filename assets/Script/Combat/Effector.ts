@@ -57,6 +57,7 @@ export default class Effector {
         effect.Param = effectParam;
         this.activeEffects.set(effectParam.Name,effect);
         this.expiredEffects.delete(effectParam.Name);//从expire里面去掉
+        effect.Execute();
         
     }
 
@@ -68,6 +69,7 @@ export default class Effector {
 
         } else {//效果不是活跃状态
             if(this.isExipiredEffect(effectParam)){//如果池子里已经有和它同类的效果，抽出来用,减少new
+                console.log("已经存在");
                 this.ReactivateEffect(effectParam);
             } else {//不存在这个效果，创建，并且这个效果插入到队列里去，插入的时候要事件绑定,在效果完成之后送到过期列表里
                 var effect:EffectBase = new EffectBase(effectParam,sender,this.node);

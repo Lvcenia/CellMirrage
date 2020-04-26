@@ -21,7 +21,7 @@ export default class Damager extends cc.Component {
      * 默认值是本体结点，可以编辑器里面改
      */
     @property(cc.Node)
-    public Owner:cc.Node = this.node;
+    public Owner:cc.Node = null;
     
     @property
     public baseDamage:number = 10;
@@ -30,10 +30,10 @@ export default class Damager extends cc.Component {
     public damageFactor:number = 1;
 
     @property
-    isDOT:boolean;
+    isDOT:boolean = false;
 
     @property
-    isPercentage:boolean;
+    isPercentage:boolean = false;
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -50,6 +50,7 @@ export default class Damager extends cc.Component {
     public GetDamage():EffectParam{
         var damageParam = new EffectParam(EffectTemplates.HP_DOWN_NORMAL.Name);
         console.log("GetDamageCalledON" + this.Owner.name);
+        damageParam.deltaValue.mulSelf(-1);
         return damageParam;
     }
 

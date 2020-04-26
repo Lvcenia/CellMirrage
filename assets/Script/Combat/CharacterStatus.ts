@@ -9,6 +9,7 @@ import Effector from "./Effector";
 import Damager from "./Damager";
 import { EffectManager, EffectParam } from "./Effects";
 import { EffectTemplates } from "./EffectTemplates";
+import { MessageManager } from "../MessageSystem/MessageManager";
 
 const {ccclass, property} = cc._decorator;
 
@@ -67,7 +68,8 @@ export default class CharacterStatus extends cc.Component {
     public Property:CombatProperty;
 
     @property(Effector)
-    public Effector:Effector;;
+    public Effector:Effector;
+
 
     
     // LIFE-CYCLE CALLBACKS:
@@ -80,9 +82,11 @@ export default class CharacterStatus extends cc.Component {
         this.Effector = new Effector(this.node);
         this.Property = new CombatProperty();
         
+        
     }
 
     update (dt) {
+
 
 
     }
@@ -114,8 +118,8 @@ export default class CharacterStatus extends cc.Component {
 
     onDamaged(damager:Damager){
         //EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
-        EffectManager.getInstance().TriggerEffect(new EffectParam(EffectTemplates.HP_DOWN_DELAY.Name),this.node,this.node);
-
+        EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,this.node);
+        MessageManager.getInstance().Send("HP_Player_Changed",this.Property.HP);
     }
 
     public GetProperty(type:string):cc.Vec3{

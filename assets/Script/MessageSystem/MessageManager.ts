@@ -23,7 +23,7 @@ class CallbackStoreStruct {
 @ccclass
 export class MessageManager {
     constructor(){
-        
+        console.log("MsMgr初始化")
     }
     private eventTarget:cc.EventTarget = new cc.EventTarget();
     private static _instance: MessageManager = new MessageManager();
