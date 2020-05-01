@@ -16,8 +16,10 @@ export default class enable_phy extends cc.Component {
     onLoad () {
         //step1 开启物理引擎
         cc.director.getPhysicsManager().enabled=true;
+        cc.director.getPhysicsManager().enabled = true;
         //step2 配置重力
         cc.director.getPhysicsManager().gravity=this.gravity;
+
         if(this.is_debug)
         {
             var Bits:any=cc.PhysicsManager.DrawBits;

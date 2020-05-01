@@ -19,7 +19,10 @@ export default class joystick extends cc.Component {
 
     onLoad () {
         this.stick.setPosition(cc.v2(0,0));
+        
         this.stick.on(cc.Node.EventType.TOUCH_MOVE,this.on_stick_move,this);
+        //cc.systemEvent.on(cc.SystemEvent.EventType.KEY_DOWN,this.trykeyboard,this);
+        //cc.systemEvent.on(cc.SystemEvent.EventType.KEY_UP,this.trykeyboard1,this);
         this.stick.on(cc.Node.EventType.TOUCH_END,function(){
             this.on_stick_end();
         },this);
@@ -27,7 +30,26 @@ export default class joystick extends cc.Component {
             this.on_stick_end();
         },this);
     }
+    /*trykeyboard(event:cc.Event.EventKeyboard):void{
+        
+        switch(event.keyCode) {
+            case cc.macro.KEY.n:
+                console.log('Press a key');
+                break;
+        }
+        
+    }
+    trykeyboard1(event:cc.Event.EventKeyboard):void{
+        
+        switch(event.keyCode) {
+            case cc.macro.KEY.n:
+                console.log('release a key');
+                break;
+        }
+        
 
+    }
+*/
     on_stick_move(e:cc.Touch): void{
         var screen_pos:cc.Vec2=e.getLocation();
         var pos:cc.Vec2 = this.node.convertToNodeSpaceAR(screen_pos);
@@ -53,9 +75,6 @@ export default class joystick extends cc.Component {
         this.stick.setPosition(cc.v2(0,0));
         
     }
-    start () {
-
-    }
-
+ 
     // update (dt) {}
 }

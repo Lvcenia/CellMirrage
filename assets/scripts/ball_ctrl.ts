@@ -10,8 +10,9 @@ export default class ball_ctrl extends cc.Component {
 
     @property
     speed: number = 200;
+    public degree:number=90;
 
-    private body:cc.RigidBody=null;
+    public body:cc.RigidBody=null;
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -21,6 +22,11 @@ export default class ball_ctrl extends cc.Component {
 
     start () {
 
+    }
+    onBeginContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
+        console.log("tank collider");
+
+        
     }
 
     update (dt) {
@@ -35,7 +41,8 @@ export default class ball_ctrl extends cc.Component {
         var r:number =Math.atan2(this.stick.dir.y,this.stick.dir.x);
         var degree :number=r*180/Math.PI;
         degree=360-degree;
-        degree=degree+90;
-        this.node.rotation=degree;
+        degree=-degree+270;
+        this.node.angle=degree;
+        //console.log(degree);
     }
 }
