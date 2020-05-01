@@ -9,7 +9,7 @@ import { MessageManager } from "../MessageSystem/MessageManager";
 import { Message } from "../MessageSystem/Message";
 import Effector from "./Effector";
 import CharacterStatus from "./CharacterStatus";
-import { EffectTemplates } from "./EffectTemplates";
+import { EffectTemplates } from "../DataTemplates/EffectTemplates";
 
 const {ccclass, property} = cc._decorator;
 
@@ -20,19 +20,14 @@ const {ccclass, property} = cc._decorator;
  * T代表Transform
  * P代表Physics
  */
-export enum EffectType{
-    C_MaxHP = "C_MaxHP",
-    C_HP = "C_HP",
-    C_AttackPower = "C_AttackPower",
-    C_Defense = "C_Defense",
-    T_Position = "T_Position",
-    T_Rotation = "T_Rotation",
-    T_Scale = "T_Scale",
-    T_Color = "T_Color",
-    T_Opacity = "T_Opacity",
-    P_Velocity = "P_Velocity",
-    P_Acceleration = "P_Acceleration",
+export var EffectBehaviour = {
+    Instant:"Instant",
+    OnOff:"OnOff",
+    TimeBased:"TimeBased"
+
 }
+
+
 
 /**
  * 游戏中一切对玩家和怪物的属性造成改变的对象都是效果
@@ -59,6 +54,7 @@ export class EffectParam{
         this.maxStackNum = EffectTemplates[effectName].maxStackNum;
         this.percentFactor = EffectTemplates[effectName].percentFactor;
         this.percentBase = EffectTemplates[effectName].percentBase;
+        
     }
     /**
      * 效果的ID
@@ -98,6 +94,7 @@ export class EffectParam{
     /**
      * 修改的数值量，四维向量
      * 一维属性取第一位，二维取头两位，以此类推
+     * 如果isOffset为假，用该值直接替换原值
      */
     @property()
     public deltaValue:cc.Vec3;
@@ -125,15 +122,14 @@ export class EffectParam{
     /**百分比的基准属性 */
     @property()
     public percentBase:string
+    /**是否设置偏移量，如果为false则直接将目标值设为deltaValue */
+    @property()
+    public isOffset:boolean;
+    @property()
+    public behaviourMode:string;
 
 }
 
-enum EffectState{
-    isToStart,
-    isToStay,
-    isToEnd,
-    Ended
-}
 
 @ccclass("EffectBase")
 export class EffectBase  {
@@ -146,8 +142,6 @@ export class EffectBase  {
     /**效果的接收者 */
     @property(cc.Node)
     public Target:cc.Node
-
-    protected state:EffectState;
 
         /**这三个消息用来进行效果自身的三个阶段顺序管理 */
     public ToStartMessage:string;
@@ -180,12 +174,6 @@ export class EffectBase  {
         this.Param = newParam;
     }
 
-    public ResetCallbacks(){
-        MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin,this);
-        MessageManager.getInstance().Register(this.ToStayMessage,this.OnStay,this);
-        MessageManager.getInstance().Register(this.ToEndMessage,this.OnEnd,this);
-    }
-
     /**对外暴露的执行接口，注册消息回调，触发开始事件 */
     public Execute(){
         MessageManager.getInstance().Register(this.ToStartMessage,this.OnBegin,this);
@@ -197,10 +185,48 @@ export class EffectBase  {
     }
 
     /**对外暴露的注销接口，注销本消息注册的回调 */
-    public Quit(){
+    public RemoveCallbacks(){
         MessageManager.getInstance().Drop(this.ToStartMessage,this.OnBegin);
         MessageManager.getInstance().Drop(this.ToStayMessage,this.OnStay);
         MessageManager.getInstance().Drop(this.ToEndMessage,this.OnEnd);
+    }
+
+    public Quit(){
+        MessageManager.getInstance().Send(this.ToEndMessage);
+    }
+
+    /**修改目标值的函数 
+     * 主要看是增加偏移量还是直接覆盖
+     * 以及是按百分比增加还是按固定值增加
+    */
+    protected updateTargetValue(){
+        if(this.Param.isPercentage == false)//如果不是百分比作用，按固定值处理
+        {
+            if(this.Param.isOffset == true)//如果是偏移量
+            {
+                this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+            }
+            else//直接覆盖
+            {
+                this.targetStat.SetProperty(this.Param.Type,this.Param.deltaValue);
+            }
+
+        }
+        
+        else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+            if(this.Param.isOffset == true)//如果是偏移量
+            {
+                this.targetStat.SetProperty(this.Param.Type,
+                    this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+            }
+            else//直接覆盖
+            {
+                this.targetStat.SetProperty(this.Param.Type,
+                    this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor));
+            }
+         }
+
+
     }
 
     /**效果开始时执行 主要是效果的初始化工作 在需要的逻辑结束以后触发Stay事件*/
@@ -265,23 +291,12 @@ export class EffectBase  {
         MessageManager.getInstance().Send(this.Ended,this);
     }
 
-    private ChangeValueOverTime(){
+    /**每隔一段时间修改一次值 */
+    protected ChangeValueOverTime(){
         this.currentCycleNum++;
         if(this.currentCycleNum < Math.floor(this.Param.Duratin/this.Param.cycleTime)){
-            if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
-                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
-                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
-                        this.targetStat.SetProperty(this.Param.Type,
-                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
-                     }
-            setTimeout(function(){
-                if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
-                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
-                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
-                        this.targetStat.SetProperty(this.Param.Type,
-                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
-                     }
-            },this.Param.cycleTime*1000);
+            this.updateTargetValue()
+            setTimeout(()=>{this.updateTargetValue()},this.Param.cycleTime*1000);
         }
         else{//结束
             MessageManager.getInstance().Send(this.ToEndMessage);
@@ -290,9 +305,46 @@ export class EffectBase  {
 }
 
 
-/** 这个类负责处理战斗属性的修改*/ 
-@ccclass
-export class C_Effect extends EffectBase {
+/**这个类是瞬时、单次效果的实现 例如单次的扣血、加血等 */
+@ccclass("InstantEffect")
+export class InstantEffect extends EffectBase {
+    @property()
+    propertyType:string;
+    constructor(param:EffectParam,sender:cc.Node,target:cc.Node){
+        super(param,sender,target);
+    }
+
+
+    protected OnBegin(){
+        super.OnBegin();
+
+    }
+
+    protected OnStay(){
+            console.log(this.Param.Name + "_InstantEffect_Stay");
+            this.updateTargetValue();
+             MessageManager.getInstance().Send(this.ToEndMessage);
+
+    }
+
+    protected OnEnd(){
+        console.log("效果" + this.Param.Name + "End");
+        if(this.Param.isTemporary){//如果是临时的可逆效果   恢复原来的值
+            this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+        }
+        //结束
+        MessageManager.getInstance().Send(this.Ended,this);
+
+    }
+
+}
+
+
+
+/** 这个类是开关类型效果的实现 例如穿上装备增加值，脱下时减少值
+ * 这种效果需要外部调用.Quit()函数来手动结束，否则效果将一直存在*/ 
+@ccclass("OnOffEffect")
+export class OnOffEffect extends EffectBase {
     @property()
     propertyType:string;
     constructor(param:EffectParam,sender:cc.Node,target:cc.Node){
@@ -300,24 +352,29 @@ export class C_Effect extends EffectBase {
     }
 
     protected OnBegin(){
-        console.log("C_Effect_OnBegin()");
         super.OnBegin();
-        //this.propertyType = this.Param.Type.split("_")[0];
-        MessageManager.getInstance().Send(this.ToStayMessage);
-        }
-    protected OnStay(){
-        console.log("C_Effect_OnStay()");
-        super.OnStay();
-        //this.propertyType = this.Param.Type.split("_")[0];
 
-        MessageManager.getInstance().Send(this.ToEndMessage);
     }
-    protected OnEnd(){
-        console.log("C_Effect_OnEnd()");
-        super.OnEnd();
-        this.propertyType = this.Param.Type.split("_")[0];
 
-        MessageManager.getInstance().Send(this.Ended);
+    /**开关型的OnStay不会触发ToEnd消息 */
+    protected OnStay(){
+        console.log(this.Param.Name + "_InstantEffect_Stay");
+        if(this.Param.isCycle)
+            this.ChangeValueOverTime();
+        else
+            this.updateTargetValue();
+
+    }
+
+    protected OnEnd(){
+        console.log("效果" + this.Param.Name + "End");
+
+        //因为是开关型的 在结束后会移除当前效果的影响
+        this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+        
+        //结束
+        MessageManager.getInstance().Send(this.Ended,this);
+        
     }
 
 }
@@ -325,9 +382,28 @@ export class C_Effect extends EffectBase {
     
 
 
+/**这个类是处理基于时间执行的效果 这个效果将在给定的时间之后被移除*/
+@ccclass("TimeBasedEffect")
+export class TimeBasedEffect extends EffectBase {
+    @property()
+    propertyType:string;
+    constructor(param:EffectParam,sender:cc.Node,target:cc.Node){
+        super(param,sender,target);
+    }
 
-@ccclass
-export class T_Effect extends EffectBase {
+    protected OnBegin(){
+        super.OnBegin();
+
+    }
+
+    protected OnStay(){
+        super.OnStay();
+
+    }
+
+    protected OnEnd(){
+        
+    }
 
 }
 
@@ -336,6 +412,7 @@ export class T_Effect extends EffectBase {
 @ccclass
 export class EffectManager {
     constructor(){
+        console.log("初始化EffectManager");
 
     }
     private static _instance: EffectManager = new EffectManager();
@@ -361,7 +438,4 @@ export class EffectManager {
         status.Effector.TriggerNewEffect(effectParam,sender);
 
     }
-
-
-
 }

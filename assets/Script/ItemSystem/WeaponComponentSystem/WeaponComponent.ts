@@ -5,7 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { SubWeaponComponent } from "./SubComps/SubWeaponComponent";
+import { SubWeaponComponent } from "./SubCompScripts/SubWeaponComponent";
+import { MessageManager } from "../../MessageSystem/MessageManager";
 
 
 const {ccclass, property} = cc._decorator;
@@ -24,10 +25,9 @@ export default class WeaponComponent extends cc.Component {
     private midSubComp:SubWeaponComponent;
     private bottomSubComp:SubWeaponComponent;
 
-    /**子组件结点的动画机引用 */
-    private topSubAnim:cc.Animation;
-    private midSubAnim:cc.Animation;
-    private bottomSubAnim:cc.Animation;
+    private hasNullChild:boolean = false;
+
+
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -37,24 +37,57 @@ export default class WeaponComponent extends cc.Component {
         this.getSubWeaponComps();
     }
 
-    /**拿到子物体里的子组件引用 */
+    /**拿到子物体里的子组件引用 子物体必须都存在*/
     private getSubWeaponComps(){
-        this.topSub = cc.find("/TopSubComp",this.node);
-        this.midSub = cc.find("/MidSubComp",this.node);
-        this.bottomSub = cc.find("/BottomSubComp",this.node);
+        this.topSub = cc.find("/Top",this.node);
+        this.midSub = cc.find("/Mid",this.node);
+        this.bottomSub = cc.find("/Bottom",this.node);
+
+        if(this.topSub == null || this.midSub == null || this.bottomSub == null)
+        {
+            this.hasNullChild = true;
+            return;
+        } 
 
         this.topSubComp = this.topSub.getComponent(SubWeaponComponent);
         this.midSubComp = this.midSub.getComponent(SubWeaponComponent);
         this.bottomSubComp = this.bottomSub.getComponent(SubWeaponComponent);
 
-        this.topSubAnim = this.topSub.getComponent(cc.Animation);
-        this.midSubAnim = this.midSub.getComponent(cc.Animation);
-        this.bottomSubAnim = this.bottomSub.getComponent(cc.Animation);
     }
 
     /**需要攻击时调用 */
-    private onAttackRequest(){
+    public onAttackRequest(){
+        if(this.hasNullChild) {
+            console.log(this.node.name + "有子物体为空");
+            return;
+        }
 
+        /**逐级传递并计算连接参数 */
+        let connectParam1 = this.bottomSubComp.ParseParam();
+                //把第一级的连接参数传到第二级 得到叠加后的连接参数
+        let connectParam2 = this.midSubComp.ParseParam(connectParam1);
+                /**把叠加完成后的连接参数传到伤害组件中去*/
+        this.topSubComp.ParseParam(connectParam2);
+        /**执行动作 */
+        this.bottomSubComp.ExecAction(null);
+
+        
+        /**执行动作 */
+        this.midSubComp.ExecAction(connectParam1);
+
+
+        /** 执行武器的动作*/
+        this.topSubComp.ExecAction(connectParam2);
+
+        
+
+
+
+
+    }
+
+    /**需要胞吞时调用 */
+    public onEndocytosis(){
 
     }
 

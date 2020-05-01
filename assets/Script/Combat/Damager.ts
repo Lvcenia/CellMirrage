@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
 import { EffectParam } from "./Effects";
-import { EffectTemplates } from "./EffectTemplates";
+import { EffectTemplates } from "../DataTemplates/EffectTemplates";
 
 const {ccclass, property} = cc._decorator;
 
@@ -35,6 +35,9 @@ export default class Damager extends cc.Component {
     @property
     isPercentage:boolean = false;
 
+    @property
+    percentFactor:number = 0;
+
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
@@ -48,7 +51,7 @@ export default class Damager extends cc.Component {
 
     /**这个函数由被攻击者调用，计算伤害，然后返回效果给被攻击者，伤害值四舍五入 */
     public GetDamage():EffectParam{
-        var damageParam = new EffectParam(EffectTemplates.HP_DOWN_NORMAL.Name);
+        let damageParam = new EffectParam(EffectTemplates.HP_DOWN_NORMAL.Name);
         console.log("GetDamageCalledON" + this.Owner.name);
         damageParam.deltaValue.mulSelf(-1);
         return damageParam;

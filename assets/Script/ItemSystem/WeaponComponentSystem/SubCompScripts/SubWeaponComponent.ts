@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { SubWeaponComponentData } from "../../ItemsData";
+import { SubWeaponComponentData, ConnectiveComponentData } from "../../ItemsData";
 
 
 
@@ -34,15 +34,19 @@ export class SubWeaponComponent extends cc.Component {
     // onLoad () {}
 
     start () {
-
-
+        this.sprite = this.getComponent(cc.Sprite);
+        this.anim = this.getComponent(cc.Animation);
+        this.audioSource = this.getComponent(cc.AudioSource);
+        this.rb = this.getComponent(cc.RigidBody);
 
     }
 
-    /**执行子组件功能的接口 */
-    public Exec():any{
+    /**执行子组件功能的接口 参数是从底下一级传上来的连接效果参数*/
+    public ParseParam(paramFromLower?:ConnectiveComponentData):any{
 
-    
-    // update (dt) {}
-}
+    }
+
+    public ExecAction(param:ConnectiveComponentData){
+
+    }
 }

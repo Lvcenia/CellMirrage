@@ -29,8 +29,19 @@ export default class ConnectiveSubWeaponComp extends SubWeaponComponent {
 
     // update (dt) {}
 
-    /**重写Exec 对于连接型子组件 会将自己的功能传递到上层去 */
-    public Exec(){
+    /**重写Exec 对于连接型子组件 计算效果参数的叠加效果 */
+    public ParseParam(paramFromLower:ConnectiveComponentData):any{
+        this.anim.play();
+        paramFromLower.AttackSpeed_Mult *= this.subWeaponCompParam.AttackSpeed_Mult;
+        paramFromLower.BulletVelocity += this.subWeaponCompParam.BulletVelocity;
+        paramFromLower.Damage_Mult *= this.subWeaponCompParam.Damage_Mult;
+        paramFromLower.Force += this.subWeaponCompParam.Force;
+        paramFromLower.ObjectNumber_Mult *= this.subWeaponCompParam.ObjectNumber_Mult;
+        return paramFromLower;
+    }
+
+    /**执行自己的动作逻辑（如果有） */
+    public ExecAction(param:ConnectiveComponentData){
 
     }
 }

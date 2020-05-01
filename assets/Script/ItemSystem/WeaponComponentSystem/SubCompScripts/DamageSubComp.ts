@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { SubWeaponComponentData, DamageComponentData } from "../../ItemsData";
+import { SubWeaponComponentData, DamageComponentData, ConnectiveComponentData } from "../../ItemsData";
 import Damager from "../../../Combat/Damager";
 import { SubWeaponComponent } from "./SubWeaponComponent";
 
@@ -27,19 +27,25 @@ export default class DamageSubWeaponComp extends SubWeaponComponent {
 
     start () {
         super.start();
-
+        this.damager = this.getComponent(Damager);
     }
 
     // update (dt) {}
+
+    /**重写Exec，对于伤害型子组件，会把下层传来的参数赋给Damager*/
+    public ParseParam(paramFromLower:ConnectiveComponentData){
+        this.damager.damageFactor = paramFromLower.Damage_Mult;
+        
+        
+
+        
+
+    }
     
-    //重写Exec，对于连接型子组件，会执行自己的动画
-    public Exec(){
+    /**处理攻击相关的逻辑 主要是动画控制*/
+    public ExecAction(param:ConnectiveComponentData){
         //首先要播放动画
         this.anim.play();
-        //然后根据不同的名字做相应的调整
-        switch(this.subWeaponCompParam.Name){
-            case "":break;
-        }
 
     }
 }

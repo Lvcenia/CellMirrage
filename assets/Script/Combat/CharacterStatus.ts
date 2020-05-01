@@ -8,7 +8,7 @@
 import Effector from "./Effector";
 import Damager from "./Damager";
 import { EffectManager, EffectParam } from "./Effects";
-import { EffectTemplates } from "./EffectTemplates";
+import { EffectTemplates } from "../DataTemplates/EffectTemplates";
 import { MessageManager } from "../MessageSystem/MessageManager";
 
 const {ccclass, property} = cc._decorator;
@@ -23,22 +23,25 @@ export const CombatPropertyTypes = {
     Velocity:"Velocity",
     Acceleration:"Acceleration",
     hasHitBox:"hasHitBox",
-    Color:"Color"
+    Color:"Color",
+    AttackSpeed:"AttackSpeed"
 
 }
 
+/**Rotation是一维数字，基于cc.Noed.angle */
 @ccclass("CombatProperty")
 export class CombatProperty{
     constructor(){
         this.MaxHP = 100;
         this.HP = this.MaxHP;
         this.Position = new cc.Vec3(0,0,0);
-        this.Rotation = new cc.Vec3(0,0,0);
+        this.Rotation = 0;
         this.Scale = new cc.Vec3(1,1,1);
         this.Velocity = new cc.Vec3(0,0,0);
-        this.Acceleration =new cc.Vec3(0,0,0);
+        this.Acceleration = new cc.Vec3(0,0,0);
         this.hasHitBox = true;
         this.Color = new cc.Vec3(0,0,0);
+        this.AttackSpeed = 1;
     }
     @property()
     MaxHP:number;
@@ -49,7 +52,7 @@ export class CombatProperty{
     @property()
     Position:cc.Vec3;
     @property()
-    Rotation:cc.Vec3;
+    Rotation:number;
     @property()
     Scale:cc.Vec3;
     @property()
@@ -58,8 +61,11 @@ export class CombatProperty{
     Acceleration:cc.Vec3;
     @property()
     Color:cc.Vec3;
+    @property()
+    AttackSpeed:number;
 
 };
+
 /**这个类是挂在玩家和敌人物体上的战斗管理类，管理各种可能的战斗属性和战斗生命周期 */
 @ccclass
 export default class CharacterStatus extends cc.Component {
@@ -75,7 +81,7 @@ export default class CharacterStatus extends cc.Component {
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        
+
     }
 
     start () {
@@ -86,7 +92,6 @@ export default class CharacterStatus extends cc.Component {
     }
 
     update (dt) {
-
 
 
     }
@@ -131,7 +136,7 @@ export default class CharacterStatus extends cc.Component {
             case CombatPropertyTypes.Position:
                 return this.Property.Position;
             case CombatPropertyTypes.Rotation:
-                return this.Property.Rotation
+                return new cc.Vec3(this.Property.Rotation,0,0);
             case CombatPropertyTypes.Scale:
                 return this.Property.Scale;
             case CombatPropertyTypes.Acceleration:
@@ -142,6 +147,8 @@ export default class CharacterStatus extends cc.Component {
                 return new cc.Vec3(this.Property.hasHitBox? 1:0,0,0);
             case CombatPropertyTypes.Color:
                 return this.Property.Color;
+            case CombatPropertyTypes.AttackSpeed:
+                break;
 
             default:break;
         }
@@ -162,9 +169,8 @@ export default class CharacterStatus extends cc.Component {
                 this.node.setPosition(value);
                 break;
             case CombatPropertyTypes.Rotation:
-                var q = new cc.Quat(value.x)
-                this.Property.Rotation = value;
-                this.node.setRotation(q);
+                this.Property.Rotation = value.x;
+                this.node.angle = this.Property.Rotation;
                 break;
             case CombatPropertyTypes.Scale:
                 this.Property.Scale = value;
@@ -190,7 +196,9 @@ export default class CharacterStatus extends cc.Component {
                     break;
             case CombatPropertyTypes.Color:
                 this.Property.Color = value;
-
+            
+            case CombatPropertyTypes.AttackSpeed:
+                break;
 
                 
                 
