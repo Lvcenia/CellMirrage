@@ -38,14 +38,14 @@ export default class Bullet extends cc.Component {
             // console.log(this.node.getPosition().y);
 
             let direction:cc.Vec2 =cc.v2(Math.sin(this.node.angle*0.017453293)*100,Math.cos(this.node.angle*0.017453293)*100);
-            direction.x=-Math.sin(this.node.angle*0.017453293)*1000;
-            direction.y=Math.cos(this.node.angle*0.017453293)*1000;
+            direction.x=-Math.sin(this.node.angle*0.017453293)*this.speed;
+            direction.y=Math.cos(this.node.angle*0.017453293)*this.speed;
             this.body.linearVelocity=direction;        
-            console.log("shoot success");
+            
             if(this.node.x<=-cc.winSize.width*0.5||this.node.x>=cc.winSize.width*0.5||this.node.y<=-cc.winSize.height*0.5||this.node.y>=cc.winSize.height*0.5)
             {
                 this.node.removeFromParent();
-                console.log("remove success");
+                
             }
         
     }
