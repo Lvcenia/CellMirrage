@@ -26,6 +26,7 @@ export default class ItemBackPack extends cc.Component {
     private SubComps = {};
     private EquippedWeapons:WeaponComponentData[] = [];
     private SubComponents:SubWeaponComponentData[] = [];
+    
     private WeaponComponents:WeaponComponentData[] = [];
     // LIFE-CYCLE CALLBACKS:
 
@@ -96,6 +97,12 @@ export default class ItemBackPack extends cc.Component {
     /**捡取获得武器时的逻辑 */
     public onWeaponObtained(param:WeaponComponentData){
         this.WeaponComponents.push(param);
+
+    }
+
+    /**捡取获得子组件的逻辑 */
+    public onSubCompObtained(name:string){
+        this.SubComps[name]++;
 
     }
 

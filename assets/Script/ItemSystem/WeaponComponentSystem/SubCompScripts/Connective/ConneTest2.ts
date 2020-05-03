@@ -26,5 +26,9 @@ export default class ConneTest2 extends ConnectiveSubWeaponComp {
 
     }
 
+    public ExecAction(param:ConnectiveComponentData){
+        
+    }
+
     // update (dt) {}
 }

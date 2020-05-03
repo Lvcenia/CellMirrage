@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-const {ccclass, property} = cc._decorator;
+
 
 /**这个文件存放各种已经写好的由EXCEL转换过来的效果的模板 */
 export var EffectTemplates = {

@@ -28,6 +28,8 @@ export class SubWeaponComponent extends cc.Component {
     protected audioSource:cc.AudioSource;
     //刚体
     protected rb:cc.RigidBody;
+    //关节
+    public joint:cc.Joint;
     
     // LIFE-CYCLE CALLBACKS:
 
@@ -38,6 +40,7 @@ export class SubWeaponComponent extends cc.Component {
         this.anim = this.getComponent(cc.Animation);
         this.audioSource = this.getComponent(cc.AudioSource);
         this.rb = this.getComponent(cc.RigidBody);
+        this.joint = this.getComponent(cc.Joint);
 
     }
 

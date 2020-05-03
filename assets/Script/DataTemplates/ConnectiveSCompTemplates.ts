@@ -44,5 +44,18 @@ export var ConnectiveSCompTemplates = {
 		"ElasticFactor": 0,
 		"BulletVelocity": 0,
 		"Force": 0
+	},
+	"三叉戟": {
+		"ID": 2004,
+		"Name": "三叉戟",
+		"Description": "下一单位的个数*3，最终伤害*0.5",
+		"SpriteName": "",
+		"Domian": "Connective",
+		"ObjectNumber_Mult": 3,
+		"AttackSpeed_Mult": 1,
+		"Damage_Mult": 0.5,
+		"ElasticFactor": 0,
+		"BulletVelocity": 0,
+		"Force": 0
 	}
 };

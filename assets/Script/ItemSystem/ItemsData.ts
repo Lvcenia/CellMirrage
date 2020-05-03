@@ -25,7 +25,6 @@ export class WeaponComponentData{
         this.Name = topName+"的、"+midName+"的、"+ bottomName;
         this.Description = `由${topName}、${midName}、${bottomName}组合而成的武器`;
        
-
     }
     public ID:number;
     public Name:string;
@@ -97,6 +96,8 @@ export class DamageComponentData extends SubWeaponComponentData{
         super(name,DamageSCompTemplates[name].ID,DamageSCompTemplates[name].Description,
             DamageSCompTemplates[name].Domian,DamageSCompTemplates[name].SpriteName);
 
+           
+           
         this.Duration = DamageSCompTemplates[name].Duration;
         this.KickBackForce = DamageSCompTemplates[name].KickBackForce;
         this.PercentFactor = DamageSCompTemplates[name].PercentFactor;

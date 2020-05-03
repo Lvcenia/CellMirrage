@@ -46,7 +46,7 @@ export default class Effector {
     private DeactivateEffect(effect:EffectBase){
         MessageManager.getInstance().Drop(effect.Ended,this.DeactivateEffect);
         console.log("Deactivate" + effect.Param.Name);
-        effect.Quit();
+        effect.RemoveCallbacks();
         this.expiredEffects.set(effect.Param.Name,effect);
         this.activeEffects.delete(effect.Param.Name);//从active里面去掉
 
