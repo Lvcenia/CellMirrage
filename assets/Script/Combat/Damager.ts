@@ -52,7 +52,9 @@ export default class Damager extends cc.Component {
     /**这个函数由被攻击者调用，计算伤害，然后返回效果给被攻击者，伤害值四舍五入 */
     public GetDamage():EffectParam{
         let damageParam = new EffectParam(EffectTemplates.HP_DOWN_NORMAL.Name);
-        console.log("GetDamageCalledON" + this.Owner.name);
+        console.log(damageParam.behaviourMode);
+        damageParam.Duratin = 3;
+        damageParam.deltaValue.x = 50;
         damageParam.deltaValue.mulSelf(-1);
         return damageParam;
     }

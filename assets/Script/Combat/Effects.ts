@@ -27,6 +27,11 @@ export var EffectBehaviour = {
 
 }
 
+export var EffectUpdateValueMode = {
+    Add:"Add",
+    SetTo:"SetTo"
+}
+
 
 
 /**
@@ -54,6 +59,8 @@ export class EffectParam{
         this.maxStackNum = EffectTemplates[effectName].maxStackNum;
         this.percentFactor = EffectTemplates[effectName].percentFactor;
         this.percentBase = EffectTemplates[effectName].percentBase;
+        this.behaviourMode = EffectTemplates[effectName].behaviourMode;
+        this.updateMode = EffectTemplates[effectName].updateMode;
         
     }
     /**
@@ -72,7 +79,7 @@ export class EffectParam{
     @property()
     public Type:string
     /**
-     * 是否会在结束以后把属性值恢复到使用前的状态
+     * 是否会将效果的结果与效果是否存在挂钩
      */
     @property()
     public isTemporary:boolean;
@@ -94,7 +101,7 @@ export class EffectParam{
     /**
      * 修改的数值量，四维向量
      * 一维属性取第一位，二维取头两位，以此类推
-     * 如果isOffset为假，用该值直接替换原值
+     * 如果updateMode为SetTo，用该值直接替换原值,否则在原值上加上该值
      */
     @property()
     public deltaValue:cc.Vec3;
@@ -122,9 +129,10 @@ export class EffectParam{
     /**百分比的基准属性 */
     @property()
     public percentBase:string
-    /**是否设置偏移量，如果为false则直接将目标值设为deltaValue */
+        /**修改值的方式 */
     @property()
-    public isOffset:boolean;
+    public updateMode:string;
+    /**效果的行为模式 分成瞬时、开关和时间三种 */
     @property()
     public behaviourMode:string;
 
@@ -153,6 +161,7 @@ export class EffectBase  {
     public Ended:string;
 
     dataBefore:cc.Vec3;
+    dataInit:cc.Vec3;
     currentCycleNum:number;
     targetStat:CharacterStatus;
 
@@ -202,7 +211,7 @@ export class EffectBase  {
     protected updateTargetValue(){
         if(this.Param.isPercentage == false)//如果不是百分比作用，按固定值处理
         {
-            if(this.Param.isOffset == true)//如果是偏移量
+            if(this.Param.updateMode === EffectUpdateValueMode.Add)//如果是偏移量
             {
                 this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
             }
@@ -214,7 +223,7 @@ export class EffectBase  {
         }
         
         else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
-            if(this.Param.isOffset == true)//如果是偏移量
+            if(this.Param.updateMode == EffectUpdateValueMode.Add)//如果是偏移量
             {
                 this.targetStat.SetProperty(this.Param.Type,
                     this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
@@ -225,6 +234,8 @@ export class EffectBase  {
                     this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor));
             }
          }
+         
+         this.dataBefore = this.targetStat.GetProperty(this.Param.Type);
 
 
     }
@@ -232,7 +243,7 @@ export class EffectBase  {
     /**效果开始时执行 主要是效果的初始化工作 在需要的逻辑结束以后触发Stay事件*/
     protected OnBegin(){
         //非空检查
-        console.log("效果" + this.Param.Name +"Begin");
+        console.log("效果" + this.Param.Name +" Begin");
         if(this.Target == null) {
             console.warn("效果" + this.Param.Name + "target为空");
             return;
@@ -244,61 +255,65 @@ export class EffectBase  {
         }
         //储存旧值
         this.dataBefore = this.targetStat.GetProperty(this.Param.Type);
-        console.log("旧：" + this.dataBefore.x + " " + this.dataBefore.y + " " + this.dataBefore.z);
+        this.dataInit = new cc.Vec3(this.dataBefore.x,this.dataBefore.y,this.dataBefore.z);
+        console.log("旧：" + this.dataInit.x + " " + this.dataInit.y + " " + this.dataInit.z);
         //进入活跃状态
         MessageManager.getInstance().Send(this.ToStayMessage);
     }
 
     /**效果进行中执行  消息的主要逻辑 在需要的逻辑结束以后触发End事件*/
     protected OnStay(){
-        console.log("效果" + this.Param.Name + "Stay");
-        if(this.Param.Duratin == 0){//即时的效果
-            console.log("duration 0");
-            if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
-            this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
-            else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
-                this.targetStat.SetProperty(this.Param.Type,
-                    this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
-             }
-             MessageManager.getInstance().Send(this.ToEndMessage);
-            return;
-        }
-        else{//如果不是即时效果
-            console.log("duration" + this.Param.Duratin);
-            if(this.Param.isCycle == false){//如果不是循环改变 设一个定时器，在到达时间后触发
-                setTimeout(()=>{
-                    if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
-                    this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
-                    else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
-                        this.targetStat.SetProperty(this.Param.Type,
-                            this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
-                     }
-                     MessageManager.getInstance().Send(this.ToEndMessage);
-                },this.Param.Duratin*1000);
-            } else {//如果是循环改变的
-                this.ChangeValueOverTime();
-            }
-        }
+        // console.log("效果" + this.Param.Name + " Stay");
+        // if(this.Param.Duratin == 0){//即时的效果
+        //     if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+        //     this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+        //     else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+        //         this.targetStat.SetProperty(this.Param.Type,
+        //             this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+        //      }
+        //      MessageManager.getInstance().Send(this.ToEndMessage);
+        //     return;
+        // }
+        // else{//如果不是即时效果
+        //     if(this.Param.isCycle == false){//如果不是循环改变 设一个定时器，在到达时间后触发
+        //         setTimeout(()=>{
+        //             if(this.Param.isPercentage == false)//如果不是百分比作用，直接加上deltaV
+        //             this.targetStat.SetProperty(this.Param.Type,this.dataBefore.add(this.Param.deltaValue));
+        //             else {//如果是百分比作用，先取到百分比的基准值，然后乘百分比，再加
+        //                 this.targetStat.SetProperty(this.Param.Type,
+        //                     this.dataBefore.add(this.targetStat.GetProperty(this.Param.percentBase).mulSelf(this.Param.percentFactor)));
+        //              }
+        //              MessageManager.getInstance().Send(this.ToEndMessage);
+        //         },this.Param.Duratin*1000);
+        //     } else {//如果是循环改变的
+        //         this.ChangeValueOverTime();
+        //     }
+        // }
     }
 
     /**效果结束时执行 */
     protected OnEnd(){
-        console.log("效果" + this.Param.Name + "End");
-        if(this.Param.isTemporary){//如果是临时的可逆效果   恢复原来的值
-            this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
-        }
-        //结束
-        MessageManager.getInstance().Send(this.Ended,this);
+        // console.log("效果" + this.Param.Name + " End");
+        // if(this.Param.isTemporary){//如果是临时的可逆效果   恢复原来的值
+        //     this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+        // }
+        // //结束
+        // MessageManager.getInstance().Send(this.Ended,this);
     }
 
     /**每隔一段时间修改一次值 */
     protected ChangeValueOverTime(){
         this.currentCycleNum++;
-        if(this.currentCycleNum < Math.floor(this.Param.Duratin/this.Param.cycleTime)){
-            this.updateTargetValue()
-            setTimeout(()=>{this.updateTargetValue()},this.Param.cycleTime*1000);
+        console.log(this.currentCycleNum);
+        //开关型的 或者时间型的都可能用
+        if(this.currentCycleNum < Math.floor(this.Param.Duratin/this.Param.cycleTime) ||
+           this.Param.behaviourMode === EffectBehaviour.OnOff){
+            this.updateTargetValue();
+            setTimeout(()=>{this.ChangeValueOverTime()},this.Param.cycleTime*1000);
         }
         else{//结束
+            console.log(this.Param.Name + " TimeUp");
+            this.currentCycleNum = 0;
             MessageManager.getInstance().Send(this.ToEndMessage);
         }
     }
@@ -316,6 +331,7 @@ export class InstantEffect extends EffectBase {
 
 
     protected OnBegin(){
+        console.log(this.Param.Name + "_InstantEffect_Begin");
         super.OnBegin();
 
     }
@@ -328,9 +344,9 @@ export class InstantEffect extends EffectBase {
     }
 
     protected OnEnd(){
-        console.log("效果" + this.Param.Name + "End");
+        console.log(this.Param.Name + "_InstantEffect_End");
         if(this.Param.isTemporary){//如果是临时的可逆效果   恢复原来的值
-            this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+            this.targetStat.SetProperty(this.Param.Type,this.dataInit);
         }
         //结束
         MessageManager.getInstance().Send(this.Ended,this);
@@ -352,13 +368,15 @@ export class OnOffEffect extends EffectBase {
     }
 
     protected OnBegin(){
+        console.log(this.Param.Name + "_OnOffEffect_Begin");
         super.OnBegin();
+        
 
     }
 
     /**开关型的OnStay不会触发ToEnd消息 */
     protected OnStay(){
-        console.log(this.Param.Name + "_InstantEffect_Stay");
+        console.log(this.Param.Name + "_OnOffEffect_Stay");
         if(this.Param.isCycle)
             this.ChangeValueOverTime();
         else
@@ -367,10 +385,10 @@ export class OnOffEffect extends EffectBase {
     }
 
     protected OnEnd(){
-        console.log("效果" + this.Param.Name + "End");
-
-        //因为是开关型的 在结束后会移除当前效果的影响
-        this.targetStat.SetProperty(this.Param.Type,this.dataBefore);
+        console.log(this.Param.Name + "_OnOffEffect_End");
+        if(this.Param.isTemporary){//如果是与效果是否存在而绑定的效果 恢复原来的值
+            this.targetStat.SetProperty(this.Param.Type,this.dataInit);
+        }
         
         //结束
         MessageManager.getInstance().Send(this.Ended,this);
@@ -392,16 +410,37 @@ export class TimeBasedEffect extends EffectBase {
     }
 
     protected OnBegin(){
+        console.log(this.Param.Name + "_TimeBasedEffect_Begin; Duration: " + this.Param.Duratin);
         super.OnBegin();
 
     }
 
     protected OnStay(){
-        super.OnStay();
+        console.log(this.Param.Name + "_TimeBasedEffect_Stay");
+        if(this.Param.isCycle){
+            console.log("isCycle");
+            this.ChangeValueOverTime();
+        }
+        else
+        {
+            console.log("non-Cycle");
+            setTimeout(()=>{
+                this.updateTargetValue();
+                 MessageManager.getInstance().Send(this.ToEndMessage);
+            },this.Param.Duratin*1000);
+        }
+
 
     }
 
     protected OnEnd(){
+        console.log(this.Param.Name + "_TimeBasedEffect_End");
+        if(this.Param.isTemporary){//如果是与效果是否存在而绑定的效果 恢复原来的值
+            this.targetStat.SetProperty(this.Param.Type,this.dataInit);
+        }
+        
+        //结束
+        MessageManager.getInstance().Send(this.Ended,this);
         
     }
 

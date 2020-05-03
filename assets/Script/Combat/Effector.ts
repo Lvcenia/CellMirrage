@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { EffectBase, EffectParam, EffectBehaviour } from "./Effects";
+import { EffectBase, EffectParam, EffectBehaviour, InstantEffect, OnOffEffect, TimeBasedEffect } from "./Effects";
 import { MessageManager } from "../MessageSystem/MessageManager";
 import Dictionary from "../Generic/Dictionary";
 
@@ -68,7 +68,11 @@ export default class Effector {
     public TriggerNewEffect(effectParam:EffectParam,sender:cc.Node){
         console.log("effectParam.ID + effectParam.Name");
         if(this.isActiveEffect(effectParam)){//先看这个效果是否正在被激活，如果是，如果可以层叠，继续，不能层叠，就返回
-            if(effectParam.isStackable == false) return;
+            if(effectParam.isStackable == false) 
+            {
+                console.log("该效果已在进行中,且无法叠加");
+                return;
+            }
 
         } else {//效果不是活跃状态
             if(this.isExipiredEffect(effectParam)){//如果池子里已经有和它同类的效果，抽出来用,减少new
@@ -78,19 +82,22 @@ export default class Effector {
                 let effectNew;
                 switch(effectParam.behaviourMode){
                     case EffectBehaviour.Instant:
+                        effectNew = new InstantEffect(effectParam,sender,this.node);
                         
                         break;
                     case EffectBehaviour.OnOff:
+                        effectNew = new OnOffEffect(effectParam,sender,this.node);
                         break;
                     case EffectBehaviour.TimeBased:
+                        effectNew = new TimeBasedEffect(effectParam,sender,this.node);
                         break;
                     default:break;
                 }
                 var effect:EffectBase = new EffectBase(effectParam,sender,this.node);
                 
-                this.activeEffects.set(effectParam.Name,effect);
-                MessageManager.getInstance().Register(effect.Ended,this.DeactivateEffect,this);
-                effect.Execute();
+                this.activeEffects.set(effectParam.Name,effectNew);
+                MessageManager.getInstance().Register(effectNew.Ended,this.DeactivateEffect,this);
+                effectNew.Execute();
             }
 
         }

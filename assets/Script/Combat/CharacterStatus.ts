@@ -71,7 +71,7 @@ export class CombatProperty{
 export default class CharacterStatus extends cc.Component {
 
     @property(CombatProperty)
-    public Property:CombatProperty;
+    public Property:CombatProperty = new CombatProperty();
 
     @property(Effector)
     public Effector:Effector;
@@ -86,9 +86,7 @@ export default class CharacterStatus extends cc.Component {
 
     start () {
         this.Effector = new Effector(this.node);
-        this.Property = new CombatProperty();
-        
-        
+
     }
 
     update (dt) {
@@ -99,8 +97,9 @@ export default class CharacterStatus extends cc.Component {
     onBeginContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
         var damager = otherCollider.node.getComponent(Damager);
         if(damager == null) return;
-        this.onDamaged(damager)
         console.log("onBeginContact");
+        this.onDamaged(damager)
+
 
     }
 
@@ -117,14 +116,14 @@ export default class CharacterStatus extends cc.Component {
     }
 
     onEndContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
-        console.log("onEnd");
+
 
     }
 
     onDamaged(damager:Damager){
         //EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
         EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,this.node);
-        MessageManager.getInstance().Send("HP_Player_Changed",this.Property.HP);
+
     }
 
     public GetProperty(type:string):cc.Vec3{
@@ -162,7 +161,8 @@ export default class CharacterStatus extends cc.Component {
             case CombatPropertyTypes.HP:
                 console.log("Setting Value" + this.Property.HP + "to " + value.x);
                 this.Property.HP = value.x;
-                console.log("Set Value" + this.Property.HP);
+                console.log("Set Value" + this.Property.HP + "Complete");
+                MessageManager.getInstance().Send("HP_Player_Changed",this.Property.HP);
                 break;
             case CombatPropertyTypes.Position:
                 this.Property.Position = value;

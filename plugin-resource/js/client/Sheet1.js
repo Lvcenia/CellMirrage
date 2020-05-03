@@ -1,14 +1,4 @@
-// Learn TypeScript:
-//  - https://docs.cocos.com/creator/manual/en/scripting/typescript.html
-// Learn Attribute:
-//  - https://docs.cocos.com/creator/manual/en/scripting/reference/attributes.html
-// Learn life-cycle callbacks:
-//  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
-
-
-
-/**这个文件存放各种已经写好的由EXCEL转换过来的效果的模板 */
-export var EffectTemplates = {
+module.exports = {
 	"HP_DOWN_NORMAL": {
 		"ID": 1001,
 		"Name": "HP_DOWN_NORMAL",
