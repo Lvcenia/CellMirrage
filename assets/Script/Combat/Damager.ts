@@ -56,6 +56,7 @@ export default class Damager extends cc.Component {
         damageParam.Duratin = 3;
         damageParam.deltaValue.x = 50;
         damageParam.deltaValue.mulSelf(-1);
+        
         return damageParam;
     }
 

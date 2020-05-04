@@ -1,6 +1,6 @@
 {
   "ver": "2.3.4",
-  "uuid": "5913b846-1d76-4d1a-9635-d3410fa49a5d",
+  "uuid": "ea6d7f1e-8574-441b-a182-17973efca3f8",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -13,8 +13,8 @@
   "subMetas": {
     "SwordsMan_tex": {
       "ver": "1.0.4",
-      "uuid": "745fe244-1627-4b6e-8733-41e9e082b742",
-      "rawTextureUuid": "5913b846-1d76-4d1a-9635-d3410fa49a5d",
+      "uuid": "cdc7927f-c010-427c-9e95-a39c7e240164",
+      "rawTextureUuid": "ea6d7f1e-8574-441b-a182-17973efca3f8",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
