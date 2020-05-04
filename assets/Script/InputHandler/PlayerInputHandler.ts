@@ -15,12 +15,6 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class PlayerInputHandler extends cc.Component {
 
-    @property(cc.Label)
-    label: cc.Label = null;
-
-    @property
-    text: string = 'hello';
-
     dir:number = 1;
     
     rb:cc.RigidBody = null;
@@ -31,7 +25,6 @@ export default class PlayerInputHandler extends cc.Component {
         {
             case cc.macro.KEY.a:
                 console.log("a");
-                
                 this.dir = -1;
                 this.rb.applyForceToCenter(new cc.Vec2(72500,0).mulSelf(this.dir),true);
                 break;

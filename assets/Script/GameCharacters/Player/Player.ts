@@ -5,26 +5,33 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import GameCharacterBase from "./GameCharacterBase";
+import GameCharacterBase from "../GameCharacterBase";
 
 const {ccclass, property} = cc._decorator;
 
+
+/**玩家角色的行为和状态的控制类 */
 @ccclass
-export default class MobBase extends GameCharacterBase {
+export default class Player extends GameCharacterBase {
 
-    @property(cc.Label)
-    label: cc.Label = null;
-
-    @property
-    text: string = 'hello';
 
     // LIFE-CYCLE CALLBACKS:
 
     // onLoad () {}
 
     start () {
+        super.start();
+        
 
     }
 
     // update (dt) {}
+
+    public Attack(){
+
+    }
+
+    public SwitchWeapon(){
+
+    }
 }

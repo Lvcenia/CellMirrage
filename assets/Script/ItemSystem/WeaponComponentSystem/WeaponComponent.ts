@@ -16,7 +16,16 @@ const {ccclass, property} = cc._decorator;
 export default class WeaponComponent extends cc.Component {
 
     //这把武器被装备的位置
+    @property
     private slotNumber:number = 0;
+    @property(cc.Node)
+    private topSubAttachNode:cc.Node = null;
+    @property(cc.Node)
+    private midSubAttachNode:cc.Node = null;
+    @property(cc.Node)
+    private bottomSubAttachNode:cc.Node = null;
+
+
     /**子组件结点的引用 */
     private topSub:cc.Node = null;
     private midSub:cc.Node = null;
@@ -64,6 +73,17 @@ export default class WeaponComponent extends cc.Component {
         this.SubCompList[1] = this.midSubComp;
         this.SubCompList[2] = this.bottomSubComp;
 
+    }
+
+    /**从外部把子组件物体设置到子组件的挂点上 */
+    public SetRealSubCompNodes(bottom:cc.Node,mid:cc.Node,top:cc.Node):void{
+        this.topSub = top;
+        this.midSub = mid;
+        this.bottomSub = bottom;
+
+        this.topSubAttachNode.addChild(this.topSub);
+        this.midSubAttachNode.addChild(this.midSub);
+        this.bottomSubAttachNode.addChild(this.bottomSub);
     }
 
     /**需要攻击时调用 */

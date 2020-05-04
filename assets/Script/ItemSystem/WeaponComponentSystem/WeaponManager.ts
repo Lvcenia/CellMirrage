@@ -19,6 +19,15 @@ export default class WeaponManager extends cc.Component  {
     @property
     PrefabUrl: string = 'Prefabs/WeaponComponentSystem/';
 
+    @property({type:cc.Node,displayName:"第1个武器的挂点"})
+    private weapon0AttachNode:cc.Node = null;
+    @property({type:cc.Node,displayName:"第2个武器的挂点"})
+    private weapon1AttachNode:cc.Node = null;
+    @property({type:cc.Node,displayName:"第3个武器的挂点"})
+    private weapon2AttachNode:cc.Node = null;
+
+
+
     /**当前正在装备的武器数组 */
     private equippedWeapons:WeaponComponent[] = [];
     /**当前活跃的武器的数组索引 */
@@ -47,28 +56,26 @@ export default class WeaponManager extends cc.Component  {
     }
 
     start () {
-        let testName:dragonBones.Armature =<dragonBones.Armature>this.getComponent(dragonBones.ArmatureDisplay).armature();
-
-        console.log("bone name: " + testName.getBone("0-0").name);
+        
         
         
     }
 
-    /**场景开始的时候加载武器和子组件的prefab资源 并入池*/
+    /**场景开始的时候加载子组件的prefab资源 并入池*/
     public InstantiatePrefabs(){
     //加载武器的prefab
-        cc.loader.loadRes(this.PrefabUrl + "WeaponPrefab", (errorMessage,loadedResource)=>{
-            //检查资源加载
-            if( errorMessage ) { cc.log( '载入预制资源失败, 原因:' + errorMessage ); return; }
-            if( !( loadedResource instanceof cc.Prefab ) ) { cc.log( '你载入的不是预制资源!' ); return; } 
-            this.weaponPrefab = loadedResource;
-            //开始实例化预制资源
-            for(let i = 0; i < 4; i++)
-            {
-                var WeaponObj = cc.instantiate(loadedResource);
-                this.WeaponNodePool.put(WeaponObj);
-            }
-       });
+    //     cc.loader.loadRes(this.PrefabUrl + "WeaponPrefab", (errorMessage,loadedResource)=>{
+    //         //检查资源加载
+    //         if( errorMessage ) { cc.log( '载入预制资源失败, 原因:' + errorMessage ); return; }
+    //         if( !( loadedResource instanceof cc.Prefab ) ) { cc.log( '你载入的不是预制资源!' ); return; } 
+    //         this.weaponPrefab = loadedResource;
+    //         //开始实例化预制资源
+    //         for(let i = 0; i < 4; i++)
+    //         {
+    //             var WeaponObj = cc.instantiate(loadedResource);
+    //             this.WeaponNodePool.put(WeaponObj);
+    //         }
+    //    });
     //加载子组件的prefab
        cc.loader.loadResDir(this.PrefabUrl+"SubComponents",cc.Prefab,(err,prefabs)=>{
               if (err) {
@@ -93,13 +100,13 @@ export default class WeaponManager extends cc.Component  {
 
 
     /**创建武器的节点实例并返回引用，在将武器装备到玩家身上时会调用 */
-    public InstantiateWeapon(param:WeaponComponentData):cc.Node{
-        let weapon:cc.Node = null;
-        if (this.WeaponNodePool.size() > 0) { // 通过 size 接口判断对象池中是否有空闲的对象
-            weapon = this.WeaponNodePool.get();
-        } else { // 如果没有空闲对象，也就是对象池中备用对象不够时，我们就用 cc.instantiate 重新创建
-            weapon = cc.instantiate(this.weaponPrefab);
-        }
+    public InstantiateWeapon(param:WeaponComponentData):cc.Node[]{
+        // let weapon:cc.Node = null;
+        // if (this.WeaponNodePool.size() > 0) { // 通过 size 接口判断对象池中是否有空闲的对象
+        //     weapon = this.WeaponNodePool.get();
+        // } else { // 如果没有空闲对象，也就是对象池中备用对象不够时，我们就用 cc.instantiate 重新创建
+        //     weapon = cc.instantiate(this.weaponPrefab);
+        // }
 
         //拿到武器以后拿子组件
         let  topSub:cc.Node = null;
@@ -143,27 +150,9 @@ export default class WeaponManager extends cc.Component  {
             }
         }
 
-        weapon.addChild(bottomSub);
-        //关节关联
-        bottomSub.getComponent(cc.Joint).connectedBody = this.node.getComponent(cc.RigidBody);
+        let subCompNodes:cc.Node[] = [bottomSub,midSub,topSub];
 
-        if(midSub !== null)
-        {
-            weapon.addChild(midSub);
-            midSub.getComponent(cc.Joint).connectedBody = bottomSub.getComponent(cc.RigidBody);
-        }
-
-        if(topSub !== null)
-        {
-            weapon.addChild(midSub);
-            topSub.getComponent(cc.Joint).connectedBody = midSub.getComponent(cc.RigidBody);
-        }
-
-        
-
-
-
-        return weapon;
+        return subCompNodes;
     }
 
     /**玩家装备某个武器时 */
@@ -173,9 +162,27 @@ export default class WeaponManager extends cc.Component  {
             console.log("装备槽号不合法"); return;
         }
 
-        
+        let weapon:cc.Node;
+        //武器挂到挂点下面
+        switch(slotNumber){
+            case 0:
+                weapon = this.weapon0AttachNode;
+                break;
+            case 1:
+                weapon = this.weapon1AttachNode;
+                break;
+            case 2:
+                weapon = this.weapon2AttachNode;
+                break;
+        }
 
+        let weaponCompnent = weapon.getComponent(WeaponComponent);
+        if(weaponCompnent === null) return;
 
+        let subSompNodes = this.InstantiateWeapon(param);
+
+        /**设置好挂点下面的子组件实体 */
+        weaponCompnent.SetRealSubCompNodes(subSompNodes[0],subSompNodes[1],subSompNodes[2]);
     }
 
     /**玩家卸下某个装备时 */
@@ -183,8 +190,8 @@ export default class WeaponManager extends cc.Component  {
 
     }
 
-    /**玩家切换当前活跃装备 */
-    public SwitchCurrentWeapon(){
+    /**玩家切换当前活跃装备 参数是将要切换到的槽*/
+    public SwitchCurrentWeapon(toSlotNumber:number){
 
     }
 

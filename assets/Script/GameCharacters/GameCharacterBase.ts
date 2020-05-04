@@ -70,8 +70,8 @@ export class CombatProperty{
 export enum CharacterGroup {
     Player = "Player",
     PlayerAttack = "PlayerAttack",
-    Enemy = "Enemy",
-    EnemyAttack = "EnemyAttack",
+    Mob = "Mob",
+    MobAttack = "MobAttack",
     Neutral = "Neutral"
 }
 
@@ -80,18 +80,20 @@ export enum CharacterGroup {
 export default class GameCharacterBase extends cc.Component {
 
 
-    @property({type:cc.Enum(CharacterGroup),displayName:"角色分组"})
-    private CharaGroup:CharacterGroup = CharacterGroup.Player;
+    @property({displayName:"角色分组"})
+    protected CharaGroup:string = "";
 
     @property(CombatProperty)
     public Property:CombatProperty = new CombatProperty();
 
-    public Effector:Effector;
+    public Effector:Effector = null;
 
-    @property({type:[cc.Enum(CharacterGroup)]})
-    public GetDamageFrom:CharacterGroup[] = [];
+    @property({type:[cc.String]})
+    public GetDamageFrom:string[] = [];
 
-    protected stateMachine = new StateMachine.create();
+    /**状态机 */
+    private characterStates:any = {};
+
 
 
     
@@ -111,39 +113,37 @@ export default class GameCharacterBase extends cc.Component {
 
     }
 
-    onBeginContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
+    protected onBeginContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
         console.log("onBeginContact");
-        if(this.GetDamageFrom.indexOf(<CharacterGroup>otherCollider.node.group) !== -1)
+        if(this.GetDamageFrom.indexOf(otherCollider.node.group) !== -1)
         {
             var damager = otherCollider.node.getComponent(Damager);
             if(damager == null) return;
             this.onDamaged(damager);
-        } 
+        } else {
+            console.log("in " + this.node.name + " " + otherCollider.node.group);
+        }
 
 
 
     }
 
     
-    onPreSolve(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
-        //console.log("onPre");
-
-    }
-
-    
-    onPostSolve(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
-        //console.log("onPost");
-
-    }
-
-    onEndContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
-
-
-    }
-
     protected onDamaged(damager:Damager){
         //EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
         EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,this.node);
+
+    }
+
+    protected MoveHorizontal(){
+
+    }
+
+    protected MoveVertical(){
+
+    }
+
+    protected Die(){
 
     }
 
