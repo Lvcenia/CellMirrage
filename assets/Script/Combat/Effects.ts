@@ -8,7 +8,7 @@
 import { MessageManager } from "../MessageSystem/MessageManager";
 import { Message } from "../MessageSystem/Message";
 import Effector from "./Effector";
-import CharacterStatus from "./CharacterStatus";
+import GameCharacterBase from "../GameCharacters/GameCharacterBase";
 import { EffectTemplates } from "../DataTemplates/EffectTemplates";
 
 const {ccclass, property} = cc._decorator;
@@ -163,7 +163,7 @@ export class EffectBase  {
     dataBefore:cc.Vec3;
     dataInit:cc.Vec3;
     currentCycleNum:number;
-    targetStat:CharacterStatus;
+    targetStat:GameCharacterBase;
 
     constructor(param:EffectParam,sender:cc.Node,target:cc.Node){
         this.Param = param;
@@ -248,7 +248,7 @@ export class EffectBase  {
             console.warn("效果" + this.Param.Name + "target为空");
             return;
         }
-        this.targetStat = this.Target.getComponent(CharacterStatus);
+        this.targetStat = this.Target.getComponent(GameCharacterBase);
         if(this.targetStat == null){
             console.warn(this.Target.name +  "属性为空");
             return;
@@ -468,7 +468,7 @@ export class EffectManager {
             console.error("目标物体为空，返回");
             return;
         }
-        var status = target.getComponent(CharacterStatus);
+        var status = target.getComponent(GameCharacterBase);
         if(status == null) {
             console.error(`物体${target.name}没有CharactoerStatus组件`)
             return;

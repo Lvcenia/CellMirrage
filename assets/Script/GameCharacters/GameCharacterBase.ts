@@ -5,11 +5,12 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import Effector from "./Effector";
-import Damager from "./Damager";
-import { EffectManager, EffectParam } from "./Effects";
+import Effector from "../Combat/Effector";
+import Damager from "../Combat/Damager";
+import { EffectManager, EffectParam } from "../Combat/Effects";
 import { EffectTemplates } from "../DataTemplates/EffectTemplates";
 import { MessageManager } from "../MessageSystem/MessageManager";
+let StateMachine = require('state-machine');
 
 const {ccclass, property} = cc._decorator;
 
@@ -66,15 +67,31 @@ export class CombatProperty{
 
 };
 
+export enum CharacterGroup {
+    Player = "Player",
+    PlayerAttack = "PlayerAttack",
+    Enemy = "Enemy",
+    EnemyAttack = "EnemyAttack",
+    Neutral = "Neutral"
+}
+
 /**这个类是挂在玩家和敌人物体上的战斗管理类，管理各种可能的战斗属性和战斗生命周期 */
 @ccclass
-export default class CharacterStatus extends cc.Component {
+export default class GameCharacterBase extends cc.Component {
+
+
+    @property({type:cc.Enum(CharacterGroup),displayName:"角色分组"})
+    private CharaGroup:CharacterGroup = CharacterGroup.Player;
 
     @property(CombatProperty)
     public Property:CombatProperty = new CombatProperty();
 
-    @property(Effector)
     public Effector:Effector;
+
+    @property({type:[cc.Enum(CharacterGroup)]})
+    public GetDamageFrom:CharacterGroup[] = [];
+
+    protected stateMachine = new StateMachine.create();
 
 
     
@@ -95,10 +112,14 @@ export default class CharacterStatus extends cc.Component {
     }
 
     onBeginContact(contact:cc.PhysicsContact,selfCollider:cc.PhysicsCollider,otherCollider:cc.PhysicsCollider){
-        var damager = otherCollider.node.getComponent(Damager);
-        if(damager == null) return;
         console.log("onBeginContact");
-        this.onDamaged(damager)
+        if(this.GetDamageFrom.indexOf(<CharacterGroup>otherCollider.node.group) !== -1)
+        {
+            var damager = otherCollider.node.getComponent(Damager);
+            if(damager == null) return;
+            this.onDamaged(damager);
+        } 
+
 
 
     }
@@ -120,7 +141,7 @@ export default class CharacterStatus extends cc.Component {
 
     }
 
-    onDamaged(damager:Damager){
+    protected onDamaged(damager:Damager){
         //EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,damager.Owner);
         EffectManager.getInstance().TriggerEffect(damager.GetDamage(),this.node,this.node);
 

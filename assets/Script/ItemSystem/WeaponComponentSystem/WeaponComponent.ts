@@ -15,15 +15,17 @@ const {ccclass, property} = cc._decorator;
 @ccclass
 export default class WeaponComponent extends cc.Component {
 
+    //这把武器被装备的位置
+    private slotNumber:number = 0;
     /**子组件结点的引用 */
-    private topSub:cc.Node;
-    private midSub:cc.Node;
-    private bottomSub:cc.Node;
+    private topSub:cc.Node = null;
+    private midSub:cc.Node = null;
+    private bottomSub:cc.Node = null;
 
     /**子组件结点的子组件引用 */
-    private topSubComp:SubWeaponComponent
-    private midSubComp:SubWeaponComponent;
-    private bottomSubComp:SubWeaponComponent;
+    private topSubComp:SubWeaponComponent = null;
+    private midSubComp:SubWeaponComponent = null;
+    private bottomSubComp:SubWeaponComponent = null;
 
     /**子组件的数组，存的也是上面这几个东西，0是底部，2是顶部 */
     public SubCompList:SubWeaponComponent[] = [];

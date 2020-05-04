@@ -1,6 +1,6 @@
 {
   "ver": "2.3.4",
-  "uuid": "bd720f30-5cad-4ea7-a8ae-9af1b4da1f5c",
+  "uuid": "57f3b4c0-8b3c-4e17-b216-084379d3d5c3",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -13,8 +13,8 @@
   "subMetas": {
     "细胞幻梦_玩家草图": {
       "ver": "1.0.4",
-      "uuid": "2e796c2f-a9f6-4c13-91d4-edf05508d7eb",
-      "rawTextureUuid": "bd720f30-5cad-4ea7-a8ae-9af1b4da1f5c",
+      "uuid": "5a5f7010-c501-42e0-80c1-40ae10c5f17d",
+      "rawTextureUuid": "57f3b4c0-8b3c-4e17-b216-084379d3d5c3",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

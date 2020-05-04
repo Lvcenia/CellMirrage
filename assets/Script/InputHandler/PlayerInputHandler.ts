@@ -13,7 +13,7 @@ const {ccclass, property} = cc._decorator;
  * 回调绑定也使用系统的cc.Node.on函数
  */
 @ccclass
-export default class NewClass extends cc.Component {
+export default class PlayerInputHandler extends cc.Component {
 
     @property(cc.Label)
     label: cc.Label = null;
@@ -33,12 +33,12 @@ export default class NewClass extends cc.Component {
                 console.log("a");
                 
                 this.dir = -1;
-                this.rb.applyForceToCenter(new cc.Vec2(725000,0).mulSelf(this.dir),true);
+                this.rb.applyForceToCenter(new cc.Vec2(72500,0).mulSelf(this.dir),true);
                 break;
             case cc.macro.KEY.d:
                 console.log("d");
                 this.dir = 1;
-                this.rb.applyForceToCenter(new cc.Vec2(725000,0).mulSelf(this.dir),true);
+                this.rb.applyForceToCenter(new cc.Vec2(72500,0).mulSelf(this.dir),true);
                 break;
             default:break;
         }

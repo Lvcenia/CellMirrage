@@ -4,21 +4,46 @@
       false,
       true,
       null,
+      true,
+      true,
       true
     ],
     [
       true,
       false,
+      true,
+      null,
+      true,
       true
     ],
     [
       false,
       true,
+      false,
+      null,
+      null,
+      true
+    ],
+    [
+      true,
+      false,
+      false,
+      false,
+      null,
+      true
+    ],
+    [
+      true,
+      true,
+      false,
+      false,
       false
     ],
     [
       true,
-      false,
+      true,
+      true,
+      true,
       false,
       false
     ]
@@ -30,9 +55,11 @@
   ],
   "group-list": [
     "Player",
-    "Enemy",
-    "PlayerAttackComp",
-    "EnemyAttack"
+    "Mob",
+    "PlayerAttack",
+    "MobAttack",
+    "Ground",
+    "RoadBlock"
   ],
   "start-scene": "2d2f792f-a40c-49bb-a189-ed176a246e49",
   "design-resolution-width": 1280,

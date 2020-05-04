@@ -1,6 +1,6 @@
 {
   "ver": "2.3.4",
-  "uuid": "b25157af-62fe-4dbd-97a5-612df0ca3c79",
+  "uuid": "20d40de8-eb76-4777-9e92-7dde5eb20e80",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
@@ -13,8 +13,8 @@
   "subMetas": {
     "垃圾机器人_tex": {
       "ver": "1.0.4",
-      "uuid": "b301fd18-aa36-4066-af1b-cba198264202",
-      "rawTextureUuid": "b25157af-62fe-4dbd-97a5-612df0ca3c79",
+      "uuid": "309f4f14-0100-4d70-8a06-dd648637e579",
+      "rawTextureUuid": "20d40de8-eb76-4777-9e92-7dde5eb20e80",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,
